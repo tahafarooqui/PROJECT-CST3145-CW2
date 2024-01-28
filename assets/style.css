@@ -1,0 +1,105 @@
+#WebApp {
+  padding: 20px;
+}
+
+.lessons-box {
+  padding: 12px 10px 0 10px;
+  margin: 10px;
+  border: 2px solid black;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #87CEEB, #FFD700, #D3D3D3);
+  height: 250px;
+}
+
+ul.cart-item {
+  margin: 0;
+  padding: 0;
+}
+
+.cart-item h5 {
+  margin: 0;
+  padding: 0;
+}
+
+.cart-item li {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 13px;
+  border: 2px solid black;
+}
+
+.user-dets {
+  background: linear-gradient(135deg, #87CEEB, #FFD700, #D3D3D3);
+  padding: 20px;
+  border-radius: 13px;
+}
+
+.checkout-btn {
+  margin: 12px 0 0 0;
+}
+
+/* Suggestions dropdown styles */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  z-index: 9999;
+  display: none;
+  float: left;
+  min-width: 160px;
+  padding: 0.5rem 0;
+  margin: 0.125rem 0 0;
+  font-size: 1rem;
+  color: #212529;
+  text-align: left;
+  list-style: none;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+}
+
+/* Show suggestions when the input is focused */
+.form-control:focus + .dropdown-menu {
+  display: block;
+}
+
+/* Style individual suggestion items */
+.dropdown-item {
+  display: block;
+  padding: 0.25rem 1.5rem;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.5;
+  color: #212529;
+  white-space: nowrap;
+}
+
+/* Highlight suggestion on hover */
+.dropdown-item:hover {
+  color: #fff;
+  text-decoration: none;
+  background-color: #007bff;
+}
+
+
+.btn-success {
+  margin: 12px 0 0 0;
+  background-color: #28a745; /* Green color from Bootstrap's btn-success */
+  color: #fff; /* White text color */
+  border: 1px solid #28a745; /* Border color */
+  border-radius: 0.25rem; /* Border radius */
+  padding: 0.5rem 1rem; /* Padding */
+}
+
+.navbar.navbar-expand-lg.bg-light {
+  background-color: #87CEEB; /* Light blue color */
+}
+
+.error-msg {
+    color: #f00;
+    font-weight: 600;
+}

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Meta tags for character set and viewport settings -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- External stylesheets and scripts -->
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/style.css">
+		<link rel="stylesheet" href="assets/bootstrap-icons/font/bootstrap-icons.min.css"> 
+
+    <script src="assets/bootstrap.bundle.min.js"></script>
+    <script src="assets/vue.js"></script>
+    <script src="assets/lessons.js"></script>
+
+    <!-- Title for the web application -->
+    <title>CST3145 Coursework 1 | VueJS Web Application</title>
+</head>
+
+	<body>
+		<!-- Main container for the VueJS Web Application -->
+		<div id="WebApp">
+
+			<!-- Navigation Bar -->
+			<nav class="navbar navbar-expand-lg bg-light">
+				<div class="container">
+					<!-- Brand link with dynamic title -->
+					<a class="navbar-brand text-success" href="index.html">{{ title }}</a>
+
+					<!-- Toggle button for responsive navigation -->
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+						data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+						aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<!-- Navigation links and search bar -->
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<!-- Navigation links -->
+						<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+							<li class="nav-item">
+								<a class="nav-link active" aria-current="page" href="#" @click="handleHomeLinkClick">Home</a>
+							</li>
+							<li class="nav-item">
+								<!-- Button to toggle the shopping cart -->
+								<button @click="toggleCart" class="btn btn-primary position-relative" :disabled="cart.length === 0">
+									  <i class="bi bi-cart"></i>
+										<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+											{{ totalItemsInCart }}
+											<span class="visually-hidden">Cart Items</span>
+										  </span>
+									</button>
+							</li>
+						</ul>
+
+						<!-- Search form -->
+						<form class="d-flex" role="search">
+							<!-- Search input with VueJS binding -->
+							<input
+								ref="searchInput"
+								class="form-control me-2"
+								type="search"
+								placeholder="Search"
+								aria-label="Search"
+								v-model="searchQuery"
+								@input="updateSearchSuggestions"
+							>
+
+							<!-- Suggestions dropdown -->
+							<ul v-if="searchSuggestions.length" class="dropdown-menu dropdown-menu-end w-30" @mousedown.stop.prevent>
+								<li v-for="suggestion in searchSuggestions" :key="suggestion">
+									<a class="dropdown-item" href="#" @mousedown.stop.prevent="selectSuggestion(suggestion)">
+										{{ suggestion }}
+									</a>
+								</li>
+							</ul>
+
+
+	
+						</form>
+
+
+					</div>
+				</div>
+			</nav>
+
+			<!-- Main content container -->
+			<div class="container">
+				<!-- Lessons List Section -->
+				<div class="lessons" v-if="showCart">
+					<br>
+					<!-- Heading for Lessons List -->
+					<h3>Lessons List</h3>
+					
+					<!-- Sort options for lessons -->
+					<div>
+						<label>Sort:</label>
+						<!-- Dropdown for sorting criteria -->
+						<select v-model="sortCriteria">
+							<option value="name">Name</option>
+							<option value="price">Price</option>
+							<option value="location">Location</option>
+							<option value="spaces">Spaces Available</option>
+						</select>
+						
+						<!-- Dropdown for sorting order -->
+						<select v-model="sortOrder">
+							<option value="asc">Ascending</option>
+							<option value="desc">Descending</option>
+						</select>
+					</div>
+
+					<!-- Display lessons using VueJS directives -->
+					<div class="row">
+						<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12 mt-3" v-for="lesson in sortedLessons" :key="lesson.id">
+							<div class="lessons-box">
+								<!-- Lesson image -->
+								<img :src="lesson.LessonImg" alt="Lesson Image" style="width: 50px; height: 50px;">
+								<p>
+									<!-- Lesson details with dynamic content -->
+									<b style="font-size: 18px;">{{ lesson.LessonName }}</b> <br>
+									<b>Location: {{ lesson.LessonLocation }}</b><br>
+									<b>Price: £{{ lesson.LessonPrice }}</b><br>
+									
+									<!-- Check if LessonSpace is greater than 0 -->
+									<div class="clearfix" style="margin-top: -15px;"></div>  
+									<span v-if="lesson.LessonSpace > 0">
+										<p style="margin: 0 0 5px 0;"><b>Space: {{ lesson.LessonSpace }} {{ lesson.LessonSpace <= 5 ? 'left' : '' }}</b></p>
+										<div class="clearfix"></div>    
+										<!-- Button to add lesson to the cart -->
+										<button @click="addToCart(lesson)" class="btn btn-success">Add to Cart</button> 
+										
+									</span>
+									
+									<span v-else>  
+										<!-- Display when lesson is out of stock -->
+										<b>Out of Stock</b> 
+										<div class="clearfix"></div>  <br>
+										<!-- Button disabled when lesson is out of stock -->
+										<button :disabled="true" class="btn btn-secondary">Add to Cart</button> 
+									</span>
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Shopping Cart section -->
+				<div class="cart" v-else>
+					<br>
+					
+					<div class="row">
+					
+					<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 mt-3">					
+					
+					<!-- User Details section -->
+					<div class="user-dets">
+						<h3>User Details</h3>
+						<!-- Form for user details with VueJS binding -->
+						<div class="mt-3 mb-5" style="max-width: 520px;">
+							<label for="username">Username: (Enter without space & numbers)</label>
+							<input type="text" id="username" class="form-control" v-model="username" maxlength="20" @input="updateUsernameValidation">
+
+							<label for="contact">Contact: (Only numbers are allowed)</label>
+							<input type="text" id="contact" class="form-control" v-model="contact" maxlength="12" @input="updateContactValidation">
+						</div>
+
+						
+						<!-- Display order details with dynamic content -->
+						<h5>Order Details:</h5>
+						Username: <b>{{ username }}</b><br>
+						Phone: <b>{{ contact }}</b><br>
+						Total Items in cart: <b> {{ totalItemsInCart }}</b><br>
+						Total Amount: <b>£{{ total }}</b>
+					</div>
+					
+				<!-- Checkout button -->
+				<button @click="checkout" :disabled="!isCheckoutEnabled" class="btn btn-primary checkout-btn">Checkout</button>
+
+
+				</div>					
+					
+					
+						<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 mt-3">					
+					<!-- Heading for Shopping Cart -->
+					<h3 class="text-center">Shopping Cart</h3>
+					
+					<!-- List of items in the cart -->
+					<ul class="cart-item">
+						<li v-for="item in cart" :key="item.id">
+							<!-- Display item details and quantity manipulation buttons -->
+							<h5>{{ item.LessonName }} in £{{ item.LessonPrice }}</h5>
+							<h5 class="mt-1 mb-2">Location: {{ item.LessonLocation }}</h5>
+							<h5 class="mt-1 mb-2">Spaces: {{ item.LessonSpace }}</h5>
+							<h5 class="mt-1 mb-2">Total:  £{{ item.LessonPrice * item.LessonSpace }}</h5>
+							<!-- Buttons to decrement, increment, and remove items from the cart -->
+							<button @click="decrementQty(item)" class="btn btn-secondary">-</button>
+							<button @click="incrementQty(item)" class="btn btn-secondary">+</button>
+							<button @click="removeFromCart(item)" class="btn btn-danger">Remove</button>
+						</li>
+					</ul>
+
+					<!-- Display total price of items in the cart -->
+					<h3 class="mt-2">Total Price: £{{ total }}</h3>
+					</div>
+					
+
+				</div>
+			</div>
+		</div>
+	</body>
+	</html>
+
+
+
+    <script>
+		/**
+		 * Vue.js Web Application
+		 *
+		 * @description: This Vue.js application, developed by Taha Farooqui, is a web-based mobile app
+		 * for managing lessons, a shopping cart, and sorting functionalities. It includes features
+		 * such as adding/removing lessons to/from the cart, updating quantities, sorting, and searching.
+		 *
+		 * @author: Taha Farooqui (https://tahafarooqui.com)
+		 * @version: 1.0
+		 * @last-modified: November 09, 2023
+		 */
+	
+
+		// Vue instance for the WebApp
+		var WebApp = new Vue({
+			// Targeting the element with the id 'WebApp'
+			el: '#WebApp',
+
+			// Data properties representing the state of the application
+			data: {
+				title: 'Vue Web Based Mobile App', // Title of the application
+				lessons: Lessons, // Array of lessons data
+				cart: [], // Array representing the items in the shopping cart
+				total: 0, // Total amount of the items in the cart
+				showCart: true, // Boolean flag to toggle between lessons and cart view
+				username: '', // User's name
+				contact: '', // User's contact information
+			    isUsernameValid: true,
+			    isContactValid: true,				
+				sortCriteria: 'name', // Criteria for sorting lessons (default is 'name')
+				sortOrder: 'asc', // Sorting order ('asc' for ascending, 'desc' for descending)
+				searchQuery: '', // User's search query for lessons,
+				isCheckoutEnabled: false, // Flag to enable/disable the checkout button
+				searchSuggestions: [] // Array to store search suggestions
+			},
+
+			// Methods representing various actions that can be performed in the application
+			methods: {
+			    // Method to prevent closing the dropdown when clicking on a suggestion
+				preventClose(event) {
+					event.stopPropagation();
+				},
+				handleHomeLinkClick() {
+					//Hide the cart
+					this.showCart = true;
+				},
+				// Method to add a lesson to the shopping cart
+				addToCart(lesson) {
+					// Check if there is available space for the lesson
+					const existingIndex = this.cart.findIndex(item => item.id === lesson.id);
+
+					if (lesson.LessonSpace > 0) {
+						// Check if the lesson is already in the cart
+						if (existingIndex !== -1) {
+							// Increase the quantity if the lesson is already in the cart
+							this.cart[existingIndex].LessonSpace++;
+						} else {
+							// Add the lesson to the cart with quantity 1
+							this.cart.push({
+								id: lesson.id,
+								LessonName: lesson.LessonName,
+								LessonLocation: lesson.LessonLocation,
+								LessonPrice: lesson.LessonPrice,
+								LessonSpace: 1,
+							});
+						}
+
+						// Decrease the available space for the lesson
+						lesson.LessonSpace--;
+
+						// Recalculate the total amount in the cart
+						this.calculateTotal();
+					}
+				},
+
+				// Method to remove a lesson from the shopping cart
+				removeFromCart(item) {
+					// Find the index of the item in the cart
+					const existingIndex = this.cart.findIndex(cartItem => cartItem.id === item.id);
+
+					if (existingIndex !== -1) {
+						// Remove the item from the cart
+						this.cart.splice(existingIndex, 1);
+
+						// Revert the LessonSpace for the removed item
+						this.lessons.find(lesson => lesson.id === item.id).LessonSpace += item.LessonSpace;
+
+						// Recalculate the total amount in the cart
+						this.calculateTotal();
+					}
+				},
+
+				// Method to increase the quantity of a lesson in the cart
+				incrementQty(item) {
+					const lesson = this.lessons.find(lesson => lesson.id === item.id);
+
+					if (lesson) {
+						// Increase the quantity in the cart and decrease the available LessonSpace
+						item.LessonSpace++;
+						lesson.LessonSpace--;
+
+						// Revert if LessonSpace becomes negative
+						if (lesson.LessonSpace < 0) {
+							item.LessonSpace--;
+							lesson.LessonSpace++;
+						}
+
+						// Recalculate the total amount in the cart
+						this.calculateTotal();
+					}
+				},
+
+				// Method to decrease the quantity of a lesson in the cart
+				decrementQty(item) {
+					const lesson = this.lessons.find(lesson => lesson.id === item.id);
+
+					if (lesson && item.LessonSpace > 1) {
+						// Decrease the quantity in the cart and increase the available LessonSpace
+						item.LessonSpace--;
+						lesson.LessonSpace++;
+
+						// Recalculate the total amount in the cart
+						this.calculateTotal();
+					}
+				},
+
+				// Method to calculate the total amount in the cart
+				calculateTotal() {
+					this.total = this.cart.reduce((acc, item) => acc + item.LessonPrice *  item.LessonSpace, 0);
+				},
+
+				// Method to toggle between lessons and cart view
+				toggleCart() {
+					// Show cart only if there are items in it
+					if (this.cart.length > 0) {
+						this.showCart = !this.showCart;
+					}
+				},
+
+				// Method to sort items based on selected criteria and order
+				sortItems(items) {
+					const key = this.sortCriteria;
+					const order = this.sortOrder === 'asc' ? 1 : -1;
+
+					return items.slice().sort((a, b) => {
+						const valueA = key === 'name' ? a.LessonName : key === 'price' ? a.LessonPrice : key === 'location' ? a.LessonLocation : a.LessonSpace;
+						const valueB = key === 'name' ? b.LessonName : key === 'price' ? b.LessonPrice : key === 'location' ? b.LessonLocation : b.LessonSpace;
+
+						if (valueA < valueB) return -1 * order;
+						if (valueA > valueB) return 1 * order;
+						return 0;
+					});
+				},
+				
+				// Method to update search suggestions based on user input
+				updateSearchSuggestions() {
+					const query = this.searchQuery.toLowerCase();
+					this.searchSuggestions = this.lessons
+						.filter(lesson =>
+							lesson.LessonName.toLowerCase().includes(query) ||
+							lesson.LessonLocation.toLowerCase().includes(query)
+						)
+						.map(lesson => lesson.LessonName);
+				},				
+
+				// Method to filter lessons based on the search query
+				searchLessons() {
+					const query = this.searchQuery.toLowerCase();
+					this.sortedLessons = this.lessons.filter(lesson =>
+						lesson.LessonName.toLowerCase().includes(query) ||
+						lesson.LessonLocation.toLowerCase().includes(query)
+					);
+				},
+				
+				
+				// Updated method to handle suggestion selection
+				selectSuggestion(suggestion) {
+					this.searchQuery = suggestion;
+					this.$refs.searchInput.value = suggestion;
+					this.searchLessons(); // Trigger the search with the selected suggestion
+					this.searchSuggestions = []; // Clear suggestions after selection
+				},
+
+				
+				
+				// Method to update the validity of the username
+				updateUsernameValidation() {
+					const trimmedUsername = this.username.trim();
+					this.isUsernameValid = /^[A-Za-z]+$/.test(trimmedUsername) && !/\d/.test(trimmedUsername) ;
+					
+					  // If the current username does not meet the conditions, update it
+					if (!this.isUsernameValid) {
+						// Remove any non-alphabetic characters from the username
+						this.username = trimmedUsername.replace(/[^A-Za-z]/g, '');
+					}				
+					
+				},
+
+
+
+				// Method to update the validity of the contact
+				updateContactValidation() {
+					const trimmedContact = this.contact.trim();
+					this.isContactValid = /^[1-9]+$/.test(trimmedContact) && trimmedContact.length <= 12;
+					
+					  // If the current username does not meet the conditions, update it
+						// If the current contact does not meet the conditions, update it
+						if (!this.isContactValid) {
+							// Remove any non-numeric characters from the contact
+							this.contact = trimmedContact.replace(/\D/g, '');
+						}
+			
+					
+					
+				},
+
+
+
+			  // Method to check if the username and contact are valid
+			  isValidUser() {
+				this.updateUsernameValidation();
+				this.updateContactValidation();
+
+				// Update the isCheckoutEnabled flag based on the validity of the user
+				this.isCheckoutEnabled = this.isUsernameValid && this.isContactValid;
+
+				// Return the overall validation result
+				return this.isCheckoutEnabled;
+			  },
+
+			  // Method to enable/disable the checkout button based on user validation
+			  updateCheckoutButton() {
+				this.isValidUser();
+			  },
+
+				// Updated checkout method with validation
+				checkout() {
+					if (this.isValidUser()) {
+						// Implement your checkout logic here
+						alert('Successfully booked!');
+
+						// Reset the cart and user details after successful checkout
+						this.cart = [];
+						this.username = '';
+						this.contact = '';
+
+						// Recalculate the total amount in the cart
+						this.calculateTotal();
+						this.showCart=true;
+													
+						
+					} else {
+						// Display an error message if the username or contact is not valid
+						alert('Please provide a valid name (letters only) and contact (numbers only).');
+                }
+				}				
+				
+			},
+
+			// Computed properties for dynamic data based on the state of the application
+			computed: {
+				// Computed property to get the total number of items in the cart
+				totalItemsInCart() {
+					return this.cart.length;
+				},
+
+				// Computed property to get the sorted lessons based on sorting criteria and order
+				sortedLessons() {
+					return this.sortItems(this.filteredLessons);
+				},
+
+				// Computed property to get the lessons filtered based on the search query
+				filteredLessons() {
+					const query = this.searchQuery.toLowerCase();
+					return this.lessons.filter(lesson =>
+						lesson.LessonName.toLowerCase().includes(query) ||
+						lesson.LessonLocation.toLowerCase().includes(query)
+					);
+				},
+			},
+		  // Watchers to react to changes in data properties
+			watch: {
+				// Watch for changes in the username or contact and update the checkout button accordingly
+				  username: 'updateUsernameValidation',
+				  contact: 'updateContactValidation',
+				// Watch for changes in both username and contact and update the checkout button
+				username: {
+					handler: 'updateCheckoutButton',
+					deep: true,
+				},
+				contact: {
+					handler: 'updateCheckoutButton',
+					deep: true,
+				},
+
+			}			
+		});
+
+    </script>
+</body>
+
+</html>
