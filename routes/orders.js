@@ -1,4 +1,5 @@
 const express = require('express');
+const { ObjectId } = require('mongodb');
 
 // Function to setup routes for 'orders'
 function ordersRoutes(client) {
@@ -11,16 +12,7 @@ function ordersRoutes(client) {
         next();
     }
 
-    // Middleware for validating new order data
-    function validateNewOrder(req, res, next) {
-        const newOrder = req.body;
-        // Example validation: Ensure that newOrder has a title and status
-        if (!newOrder.title || !newOrder.status) {
-            return res.status(400).send("Invalid order data");
-        }
-        next();
-    }
-
+    
     // GET route to fetch all orders with optional filters
     router.get('/all-orders', logRequest, async (req, res) => {
         try {
@@ -42,7 +34,7 @@ function ordersRoutes(client) {
     // GET route to fetch a specific order by ID
     router.get('/get-order-by-id/:id', logRequest, async (req, res) => {
         try {
-            const order = await collection.findOne({ _id: new client.ObjectID(req.params.id) });
+            const order = await collection.findOne({ _id: new ObjectId(req.params.id) });
             if (!order) return res.status(404).send('Order not found');
             res.json(order);
         } catch (e) {
@@ -51,11 +43,11 @@ function ordersRoutes(client) {
     });
 
     // POST route to create a new order
-    router.post('/create-order', [logRequest, validateNewOrder], async (req, res) => {
+    router.post('/create-order', logRequest, async (req, res) => {
         try {
             const newOrder = req.body;
             const result = await collection.insertOne(newOrder);
-            res.status(201).json(result.ops);
+            res.status(201).json(result);
         } catch (e) {
             console.error(e);
             res.status(500).send(e.message);
@@ -65,7 +57,7 @@ function ordersRoutes(client) {
     // DELETE route to delete an order by ID
     router.delete('/delete-order/:id', logRequest, async (req, res) => {
         try {
-            const result = await collection.deleteOne({ _id: new client.ObjectID(req.params.id) });
+            const result = await collection.deleteOne({ _id: new ObjectId(req.params.id) });
             if (result.deletedCount === 0) return res.status(404).send('Order not found');
             res.status(204).send();
         } catch (e) {
