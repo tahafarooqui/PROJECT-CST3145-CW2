@@ -3,6 +3,9 @@ const cors = require('cors');
 const { MongoClient } = require('mongodb');
 const lessonsRoutes = require('./routes/lessons');
 const ordersRoutes = require('./routes/orders');
+const logger = require('morgan');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
@@ -11,17 +14,35 @@ const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+app.use(logger('dev'));
+app.use(express.static('public'));
 app.use(express.json());
 
 
-// Logger middleware
-function loggerMiddleware(req, res, next) {
-    const currentDatetime = new Date();
-    const formattedDate = `${currentDatetime.getFullYear()}-${currentDatetime.getMonth() + 1}-${currentDatetime.getDate()} ${currentDatetime.getHours()}:${currentDatetime.getMinutes()}:${currentDatetime.getSeconds()}`;
-    const log = `[${formattedDate}] ${req.method}:${req.url}`;
-    console.log(log);
+const functionalLogStream = fs.createWriteStream(path.join(__dirname, 'logs', 'functional.log'), { flags: 'a' });
+
+
+logger.token('message', function (req, res) { return req.message });
+
+// Register the logger middleware
+function logFunction(req, res, next) {
+    const originalSend = res.send;
+    res.send = function (data) {
+        if (req.message) {
+            const logEntry = `${new Date().toISOString()} ${req.method} ${req.originalUrl} Message: ${req.message}\n`;
+            functionalLogStream.write(logEntry);
+        }
+        originalSend.apply(res, arguments);
+    }
     next();
 }
+
+app.use((req, res, next) => {
+    functionalLogStream.write(`Received a ${req.method} request at ${req.url}\n`);
+    next();
+});
+
+app.use('/static', express.static(path.join(__dirname, 'images')));
 
 
 // MongoDB connection
@@ -42,8 +63,10 @@ connectDb();
 // Routes
 app.use('/lessons', lessonsRoutes(client));
 app.use('/orders', ordersRoutes(client));
-// Register the logger middleware
-app.use(loggerMiddleware);
+
+const accessLogStream = fs.createWriteStream(path.join(__dirname, 'logs', 'access.log'), { flags: 'a' });
+app.use(logger('combined', { stream: accessLogStream }));
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
