@@ -13,6 +13,17 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+
+// Logger middleware
+function loggerMiddleware(req, res, next) {
+    const currentDatetime = new Date();
+    const formattedDate = `${currentDatetime.getFullYear()}-${currentDatetime.getMonth() + 1}-${currentDatetime.getDate()} ${currentDatetime.getHours()}:${currentDatetime.getMinutes()}:${currentDatetime.getSeconds()}`;
+    const log = `[${formattedDate}] ${req.method}:${req.url}`;
+    console.log(log);
+    next();
+}
+
+
 // MongoDB connection
 const mongoUri = 'mongodb+srv://mf883:0X5coeqrw5mFjRYS@mdx.nfeuxor.mongodb.net/?retryWrites=true&w=majority'; // MongoDB URI
 const client = new MongoClient(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -31,6 +42,8 @@ connectDb();
 // Routes
 app.use('/lessons', lessonsRoutes(client));
 app.use('/orders', ordersRoutes(client));
+// Register the logger middleware
+app.use(loggerMiddleware);
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
