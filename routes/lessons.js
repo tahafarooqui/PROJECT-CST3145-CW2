@@ -1,4 +1,5 @@
 const express = require('express');
+const { ObjectId } = require('mongodb');
 
 function lessonsRoutes(client) {
     const router = express.Router();
@@ -30,6 +31,29 @@ function lessonsRoutes(client) {
             res.status(500).send(e.message);
         }
     });
+
+    // PUT (update) an existing lessons
+    router.put('/update-lessons', async (req, res) => {
+        try {
+            // Assuming req.body contains an array of updates
+            const updates = req.body; // Example: [{ lessonId: "id1", newSpace: 10 }, { lessonId: "id2", newSpace: 15 }, ...]
+
+            // Convert updates to a format suitable for bulkWrite
+            const bulkUpdates = updates.map(update => ({
+                updateOne: {
+                    filter: { _id: new ObjectId(update.lessonId) },
+                    update: { $set: { LessonSpace: update.newSpace } }
+                }
+            }));
+
+            const result = await collection.bulkWrite(bulkUpdates);
+
+            res.json({ message: 'Lessons updated', details: result });
+        } catch (e) {
+            res.status(500).send(e.message);
+        }
+    });
+
 
     return router;
 }

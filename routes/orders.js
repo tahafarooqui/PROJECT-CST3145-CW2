@@ -50,21 +50,7 @@ function ordersRoutes(client) {
     });
     
 
-    // PUT (update) an existing order
-    router.put('/:id', async (req, res) => {
-        try {
-            const updatedOrder = req.body;
-            const result = await collection.updateOne(
-                { _id: new client.ObjectID(req.params.id) },
-                { $set: updatedOrder }
-            );
-            if (result.matchedCount === 0) return res.status(404).send('Order not found');
-            res.json(await collection.findOne({ _id: new client.ObjectID(req.params.id) }));
-        } catch (e) {
-            res.status(500).send(e.message);
-        }
-    });
-
+    
     // DELETE an order
     router.delete('/:id', async (req, res) => {
         try {
